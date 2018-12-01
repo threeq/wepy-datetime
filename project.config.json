@@ -1,0 +1,26 @@
+{
+  "description": "A WePY project",
+  "setting": {
+    "urlCheck": true,
+    "es6": false,
+    "postcss": false,
+    "minified": false,
+    "newFeature": true
+  },
+  "compileType": "miniprogram",
+  "appid": "wx5a810f7c36fa3183",
+  "projectname": "wepy-datetime",
+  "miniprogramRoot": "dist/",
+  "miniprogram": {
+    "current": 8,
+    "list": [
+      {
+        "id": 0,
+        "name": "index",
+        "pathName": "pages/index",
+        "query": ""
+      }
+    ]
+  },
+  "condition": {}
+}

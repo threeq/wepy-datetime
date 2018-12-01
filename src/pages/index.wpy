@@ -1,0 +1,88 @@
+<style lang="less">
+
+</style>
+<template>
+  <view class="container">
+    <view>
+      <button @tap="onOpenDatetime(0)">open0 => {{datetime[0]}}</button>
+      <datetimepicker0 @change.user="changeTime0">
+      </datetimepicker0>
+
+      <button @tap="onOpenDatetime(1)">open1 => {{datetime[1]}}</button>
+      <datetimepicker1
+        minuteStep="5"
+        timeFormat="HH:mm"
+        @change.user="changeTime1">
+      </datetimepicker1>
+
+      <button @tap="onOpenDatetime(2)">open2 => {{datetime[2]}}</button>
+      <datetimepicker2
+        timeFormat=""
+        @change.user="changeTime2">
+      </datetimepicker2>
+
+      <button @tap="onOpenDatetime(3)">open3 => {{datetime[3]}}</button>
+      <datetimepicker3
+        dateFormat=""
+        @change.user="changeTime3">
+      </datetimepicker3>
+
+      <button @tap="onOpenDatetime(4)">open4 => {{datetime[4]}}</button>
+      <datetimepicker4
+        defaultShow="false"
+        dateFormat=""
+        timeFormat="HH:mm"
+        :value.sync="{{datetime[4]}}"
+        @change.user="changeTime4">
+        <span style="font-size: 20px; color: red">{{datetime[4]}}</span>
+      </datetimepicker4>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import Datetimepicker from '../components/datetimepicker';
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: 'Datetime picker demo'
+    };
+    components = {
+      datetimepicker0: Datetimepicker,
+      datetimepicker1: Datetimepicker,
+      datetimepicker2: Datetimepicker,
+      datetimepicker3: Datetimepicker,
+      datetimepicker4: Datetimepicker
+    };
+
+    mixins = [];
+
+    data = {
+      datetime: ['', '', '', '', '', '', '', '', '', '', '']
+    };
+
+    computed = {};
+
+    methods = {
+      onOpenDatetime(index) {
+        this.$invoke('datetimepicker' + index, 'input', {});
+      },
+      changeTime0(datetime) {
+        this.datetime[0] = datetime.value;
+      },
+      changeTime1(datetime) {
+        this.datetime[1] = datetime.value;
+      },
+      changeTime2(datetime) {
+        this.datetime[2] = datetime.value;
+      },
+      changeTime3(datetime) {
+        this.datetime[3] = datetime.value;
+      },
+      changeTime4(datetime) {
+        this.datetime[4] = datetime.value;
+      }
+    };
+  }
+</script>

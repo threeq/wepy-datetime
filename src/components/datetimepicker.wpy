@@ -1,0 +1,394 @@
+<style lang="less">
+  .date-time-picker-wrapper {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .datetimepicker {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 16px;
+      padding: 0 30px;
+      background: #eee;
+      border-bottom: 0.5px solid #cccccc;
+    }
+    .left {
+      display: flex;
+      span {
+        padding: 10px;
+        margin-right: 15px;
+      }
+      span:last-child {
+        margin-right: 15px;
+      }
+      .selected {
+        color: #ff0000;
+        border-bottom: 2px solid #ff0000;
+      }
+    }
+    picker-view {
+      width: 100%;
+      height: 300px;
+    }
+    picker-view-column {
+      font-size: 20px;
+      text-align: center;
+      background: #fff;
+    }
+    .column-item {
+      height: 35px;
+      line-height: 35px;
+    }
+    .column-item-selected {
+      text-align: center;
+    }
+    .confirm-button {
+      height: 100%;
+      width: 100px;
+      text-align: right;
+    }
+  }
+</style>
+<template>
+  <view @tap="openPicker">
+    <span wx:if="{{defaultShow==='true'}}">{{value?value:'请输入时间'}}</span>
+    <slot></slot>
+    <view class="date-time-picker-wrapper"
+          wx:if="{{open}}"
+          @tap.stop="onCancel">
+      <view class="datetimepicker"
+            @tap.stop="stopEvent">
+        <view class="header">
+          <view class="left">
+          <span class="{{showTab==='date'?'selected':''}}"
+                wx:if="{{dateFormat}}"
+                @tap.capture.stop="changeType('date')">{{dateDesc}}</span>
+            <span class="{{showTab==='time'?'selected':''}}"
+                  wx:if="{{timeFormat}}"
+                  @tap.capture.stop="changeType('time')">{{timeDesc}}</span>
+          </view>
+          <view class="confirm-button"
+                @tap.capture.stop="onConfirm">确定
+          </view>
+        </view>
+        <picker-view wx:if="{{showTab==='date'}}"
+                     indicator-class="column-item-selected"
+                     value="{{defaultDate}}"
+                     @change="onDateChange">
+          <picker-view-column wx:if="{{showYear}}">
+            <view class="column-item"
+                  wx:for="{{years}}"
+                  wx:key="unique">{{item}}年
+            </view>
+          </picker-view-column>
+          <picker-view-column wx:if="{{showMonth}}">
+            <view class="column-item"
+                  wx:for="{{months}}"
+                  wx:key="unique">{{item}}月
+            </view>
+          </picker-view-column>
+          <picker-view-column wx:if="{{showDay}}">
+            <view class="column-item"
+                  wx:for="{{days}}"
+                  wx:key="unique">{{item+1}}日
+            </view>
+          </picker-view-column>
+        </picker-view>
+
+        <picker-view wx:if="{{showTab==='time'}}"
+                     indicator-class="column-item-selected"
+                     value="{{defaultTime}}"
+                     @change="onTimeChange">
+          <picker-view-column wx:if="{{showHour}}">
+            <view class="column-item"
+                  wx:for="{{hours}}"
+                  wx:key="unique">{{item}}时
+            </view>
+          </picker-view-column>
+          <picker-view-column wx:if="{{showMinute}}">
+            <view class="column-item"
+                  wx:for="{{minutes}}"
+                  wx:key="unique">{{item}}分
+            </view>
+          </picker-view-column>
+          <picker-view-column wx:if="{{showSecond}}">
+            <view class="column-item"
+                  wx:for="{{seconds}}"
+                  wx:key="unique">{{item}}秒
+            </view>
+          </picker-view-column>
+        </picker-view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  import moment from 'moment';
+
+  function computeYears() {
+    const now = new Date();
+    const years = [];
+    for (let i = 1990; i <= now.getFullYear() + 100; i++) {
+      years.push(i);
+    }
+    return years;
+  }
+
+  function computeMonths() {
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  }
+
+  function computeHours() {
+    const hours = [];
+    for (let i = 0; i <= 23; i++) {
+      hours.push(i);
+    }
+    return hours;
+  }
+
+  function computeMinutes(step) {
+    const minutes = [];
+    for (let i = 0; i <= 59; i += step) {
+      minutes.push(i);
+    }
+    return minutes;
+  }
+
+  function computeSeconds() {
+    const seconds = [];
+    for (let i = 0; i <= 59; i++) {
+      seconds.push(i);
+    }
+    return seconds;
+  }
+
+  export default class Datetimepicker extends wepy.component {
+
+    selectDate = [];
+    selectTime = [];
+
+    props = {
+      defaultShow: {
+        type: String,
+        default: 'true'
+      },
+      minuteStep: {
+        type: String,
+        default: 1
+      },
+      value: {
+        type: String,
+        default: ''
+      },
+      dateFormat: {
+        type: String,
+        default: 'YYYY-MM-DD'
+      },
+      timeFormat: {
+        type: String,
+        default: 'HH:mm:ss'
+      },
+      params: {
+        type: Object,
+        default: {}
+      }
+    };
+
+    data = {
+      open: false,
+      years: [],
+      months: [],
+      days: [],
+      hours: [],
+      minutes: [],
+      seconds: [],
+      defaultDate: [],
+      defaultTime: [],
+      showTab: 'date',
+
+      showYear: true,
+      showMonth: true,
+      showDay: true,
+      showHour: true,
+      showMinute: true,
+      showSecond: true,
+
+      dateDesc: '',
+      timeDesc: ''
+    };
+
+    onLoad() {
+      this.init();
+    }
+
+    methods = {
+      openPicker: () => {
+        this.init();
+        this.open = true;
+      },
+      changeType: function(type) {
+        this.showTab = type;
+      },
+      onDateChange: (e) => {
+        let selectedValues = e.detail.value;
+        let index = 0;
+        this.selectDate.forEach(it => {
+          if (it.show) {
+            it.value = selectedValues[index];
+            index++;
+          }
+        });
+        this.render();
+      },
+      onTimeChange: (e) => {
+        let selectedValues = e.detail.value;
+        let index = 0;
+        this.selectTime.forEach(it => {
+          if (it.show) {
+            it.value = selectedValues[index];
+            index++;
+          }
+        });
+        this.render();
+      },
+      onCancel() {
+        this.open = false;
+        this.notifyEvent('cancel');
+      },
+      onConfirm() {
+        this.notifyEvent('confirm');
+        this.open = false;
+      },
+      stopEvent() {
+
+      },
+      input(data = {}) {
+        this.init();
+        this.open = true;
+      }
+    };
+
+    init() {
+      const minuteStep = parseInt(this.minuteStep || 1);
+      let inputValue = moment();
+      if (this.value) {
+        inputValue = moment(this.value, this.dateFormat + ' ' + this.timeFormat);
+      }
+
+      // 计算显示的列
+      if (!this.dateFormat) {
+        this.showTab = 'time';
+      } else {
+        this.showTab = 'date';
+      }
+      this.showYear = this.dateFormat && this.dateFormat.indexOf('YYYY') >= 0;
+      this.showMonth = this.dateFormat && this.dateFormat.indexOf('MM') >= 0;
+      this.showDay = this.dateFormat && this.dateFormat.indexOf('DD') >= 0;
+      this.showHour = this.timeFormat && this.timeFormat.indexOf('HH') >= 0;
+      this.showMinute = this.timeFormat && this.timeFormat.indexOf('mm') >= 0;
+      this.showSecond = this.timeFormat && this.timeFormat.indexOf('ss') >= 0;
+
+      if (this.showYear) {
+        this.years = computeYears();
+      }
+      if (this.showMonth) {
+        this.months = computeMonths();
+      }
+      if (this.showDay) {
+        this.days = moment([inputValue.year(), inputValue.month()]).daysInMonth();
+      }
+      if (this.showHour) {
+        this.hours = computeHours();
+      }
+      if (this.showMinute) {
+        this.minutes = computeMinutes(minuteStep);
+      }
+      if (this.showSecond) {
+        this.seconds = computeSeconds();
+      }
+
+      this.selectDate = [
+        {
+          show: this.showYear,
+          value: inputValue.year() - 1990
+        },
+        {
+          show: this.showMonth,
+          value: inputValue.month()
+        },
+        {
+          show: this.showDay,
+          value: inputValue.date() - 1
+        }
+      ];
+      this.selectTime = [
+        {
+          show: this.showHour,
+          value: inputValue.hour()
+        },
+        {
+          show: this.showMinute,
+          value: Math.floor(inputValue.minutes() / minuteStep)
+        },
+        {
+          show: this.showSecond,
+          value: inputValue.second()
+        }
+      ];
+      // 计算默认值
+      this.defaultDate = this.selectDate.filter(it => it.show).map(it => it.value);
+      this.defaultTime = this.selectTime.filter(it => it.show).map(it => it.value);
+
+      this.render(true);
+    }
+
+    render(first) {
+      let datetime = this.computeSelectDate();
+      if (this.dateFormat) {
+        this.dateDesc = datetime.format(this.dateFormat);
+      }
+      if (this.timeFormat) {
+        this.timeDesc = datetime.format(this.timeFormat);
+      }
+      this.days = moment([
+        this.selectDate[0].value + 1990,
+        this.selectDate[1].value
+      ]).daysInMonth();
+
+      const format = (this.dateFormat + ' ' + this.timeFormat).trim();
+      this.value = datetime.format(format);
+
+      if (!first) {
+        this.notifyEvent('change');
+      }
+    }
+
+    computeSelectDate() {
+      return moment([
+        this.selectDate[0].value + 1990,
+        this.selectDate[1].value,
+        this.selectDate[2].value + 1,
+        this.selectTime[0].value,
+        this.minutes[this.selectTime[1].value] || 0,
+        this.selectTime[2].value
+      ]);
+    }
+
+    notifyEvent(event) {
+      this.$emit(event, { value: this.value, params: this.params });
+      this.$apply();
+    }
+  }
+</script>
